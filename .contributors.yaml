@@ -1,0 +1,29 @@
+- path: lib/falcon/limiter/long_task.rb
+  time: 2025-03-18T20:35:14+00:00
+  author:
+    name: Marc-André Cournoyer
+    email: marcandre.cournoyer@shopify.com
+
+- path: lib/falcon/limiter/long_task.rb
+  time: 2025-04-10T05:31:07+00:00
+  author:
+    name: Francisco Mejia
+    email: francisco.mejia@shopify.com
+
+- path: lib/falcon/limiter/semaphore.rb
+  time: 2025-04-11T12:10:02-04:00
+  author:
+    name: Josh Teeter
+    email: josh.teeter@shopify.com
+
+- path: lib/falcon/limiter/environment.rb
+  time: 2025-04-15T10:36:02-04:00
+  author:
+    name: Josh Teeter
+    email: josh.teeter@shopify.com
+
+- path: lib/falcon/limiter/middleware.rb
+  time: 2025-04-25T09:53:47-04:00
+  author:
+    name: Josh Teeter
+    email: josh.teeter@shopify.com

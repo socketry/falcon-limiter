@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
 	spec.version = Falcon::Limiter::VERSION
 	
 	spec.summary = "Advanced concurrency control and resource limiting for Falcon web server."
-	spec.authors = ["Samuel Williams"]
+	spec.authors = ["Josh Teeter", "Samuel Williams", "Francisco Mejia", "Marc-André Cournoyer"]
 	spec.license = "MIT"
 	
 	spec.cert_chain  = ["release.cert"]
@@ -20,11 +20,9 @@ Gem::Specification.new do |spec|
 		"source_code_uri" => "https://github.com/socketry/falcon-limiter.git",
 	}
 	
-	spec.files = Dir.glob(["{context,lib,examples}/**/*", "*.md"], File::FNM_DOTMATCH, base: __dir__)
+	spec.files = Dir.glob(["{examples,lib}/**/*", "*.md"], File::FNM_DOTMATCH, base: __dir__)
 	
 	spec.required_ruby_version = ">= 3.2"
 	
-	spec.add_dependency "async-limiter", ">= 1.5"
-	spec.add_dependency "protocol-http", "~> 0.31"
-	spec.add_dependency "async", ">= 2.31.0"
+	spec.add_dependency "async-limiter", "~> 2.0"
 end

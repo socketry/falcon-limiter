@@ -11,7 +11,7 @@ Falcon::Limiter.configure do |config|
 end
 
 # Basic Rack app demonstrating limiter usage
-run lambda { |env|
+run lambda {|env|
 	request = env["protocol.http.request"]
 	path = env["PATH_INFO"]
 	
@@ -23,12 +23,12 @@ run lambda { |env|
 		# Simulate database query or external API call
 		sleep(1.5)
 		
-		[200, {"content-type" => "text/plain"}, ["Long I/O operation completed at #{Time.now}"]]
+		[200, { "content-type" => "text/plain" }, ["Long I/O operation completed at #{Time.now}"]]
 		
 	when "/short"
 		# Short operation - long task overhead avoided by delay
 		sleep(0.05)
-		[200, {"content-type" => "text/plain"}, ["Short operation at #{Time.now}"]]
+		[200, { "content-type" => "text/plain" }, ["Short operation at #{Time.now}"]]
 		
 	when "/token-info"
 		# Show connection token information
@@ -42,9 +42,9 @@ run lambda { |env|
 			end
 		end
 		
-		[200, {"content-type" => "text/plain"}, [token_info]]
+		[200, { "content-type" => "text/plain" }, [token_info]]
 		
 	else
-		[200, {"content-type" => "text/plain"}, ["Hello from Falcon Limiter!"]]
+		[200, { "content-type" => "text/plain" }, ["Hello from Falcon Limiter!"]]
 	end
 }

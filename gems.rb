@@ -8,19 +8,32 @@ source "https://rubygems.org"
 gemspec
 
 # Use local development version of async-limiter
-gem "async-limiter", path: "../async-limiter"
+gem "async-limiter", git: "https://github.com/socketry/async-limiter.git"
 
 group :maintenance, optional: true do
 	gem "bake-gem"
+	gem "bake-modernize"
+	gem "bake-releases"
+	
+	gem "agent-context"
+	
 	gem "utopia-project"
 end
 
 group :test do
 	gem "sus"
 	gem "covered"
+	gem "decode"
+	
+	gem "rubocop"
+	gem "rubocop-socketry"
+	
+	gem "async-service"
+	
 	gem "sus-fixtures-async"
 	gem "sus-fixtures-async-http"
+	gem "sus-fixtures-console"
 	
-	gem "bake"
 	gem "bake-test"
+	gem "bake-test-external"
 end

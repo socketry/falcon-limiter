@@ -1,116 +1,142 @@
 # frozen_string_literal: true
 
 # Released under the MIT License.
+# Copyright, 2025, by Marc-André Cournoyer.
+# Copyright, 2025, by Francisco Mejia.
 # Copyright, 2025, by Samuel Williams.
 
 require "async/task"
 require_relative "semaphore"
 
+Fiber.attr_accessor :falcon_limiter_long_task
+
 module Falcon
 	module Limiter
-		# Manages long-running tasks by releasing connection tokens during I/O operations
-		# to prevent GVL contention and maintain server responsiveness.
-		# 
-		# A long task is any long (1+ sec) operation that doesn't lock the GVL. Usually long I/O.
-		# Starting a long task lets the server accept one more (potentially CPU-bound) request.
-		# This allows us to handle many concurrent I/O bound requests, without adding contention on the GVL.
+		# Manages long-running tasks by releasing connection tokens during I/O operations to prevent contention and maintain server responsiveness.
+		#
+		# A long task is any long (1+ sec) operation that isn't CPU-bound (usually long I/O). Starting a long task lets the server accept one more (potentially CPU-bound) request. This allows us to handle many concurrent I/O bound requests, without adding contention (which impacts latency).
 		class LongTask
-			START_DELAY = 0.6 # 600ms - avoid overhead for short operations
-			
-			ConnectionWentAwayError = Class.new(StandardError)
-			
-			def initialize(request, long_task_semaphore:, socket_accept_semaphore:, start_delay: START_DELAY)
-				@request = request
-				@long_task_semaphore = long_task_semaphore
-				@socket_accept_semaphore = socket_accept_semaphore
-				@start_delay = start_delay
-				@started = false
-				@long_task_token = nil
-				@delayed_start_task = nil
-				@start_time = nil
+			# @returns [LongTask] The current long task.
+			def self.current
+				Fiber.current.falcon_limiter_long_task
 			end
 			
-			attr_reader :request
+			# Assign the current long task.
+			def self.current=(long_task)
+				Fiber.current.falcon_limiter_long_task = long_task
+			end
 			
+			# Execute the block with the current long task.
+			def with
+				previous = self.class.current
+				self.class.current = self
+				yield
+			ensure
+				self.class.current = previous
+			end
+			
+			# Create a long task for the given request.
+			# Extracts connection token from the request if available for proper token management.
+			# @parameter limiter [Async::Limiter] The limiter instance for managing concurrent long tasks.
+			# @parameter request [Object] The HTTP request object to extract connection information from.
+			# @parameter options [Hash] Additional options passed to the constructor.
+			# @returns [LongTask] A new long task instance ready for use.
+			def self.for(request, limiter, **options)
+				# Get connection token from request if possible:
+				connection_token = request&.connection&.stream&.io&.token rescue nil
+				
+				return new(request, limiter, connection_token, **options)
+			end
+			
+			# Initialize a new long task with the specified configuration.
+			# @parameter limiter [Async::Limiter] The limiter instance for controlling concurrency.
+			# @parameter connection_token [Async::Limiter::Token, nil] Optional connection token to manage.
+			# @parameter start_delay [Float] Delay in seconds before starting the long task (default: 0.1).
+			def initialize(request, limiter, connection_token = nil, start_delay: 0.1)
+				@request = request
+				@limiter = limiter
+				@connection_token = connection_token
+				@start_delay = start_delay
+				
+				@token = Async::Limiter::Token.new(@limiter)
+				@delayed_start_task = nil
+			end
+			
+			# Check if the long task has been started.
+			# @returns [Boolean] True if the long task token has been acquired, false otherwise.
 			def started?
-				@started
+				@token.acquired?
 			end
 			
 			# Start the long task, optionally with a delay to avoid overhead for short operations
 			def start(delayed: true)
-				return if started?
+				# We already have a long task token, so we don't need to start a new one:
+				return if @token.acquired?
 				
-				# Must have socket accept token to proceed
-				unless socket_accept_token
-					return
-				end
-				
-				if delayed && @start_delay > 0
-					# Wait specified delay before starting the long task
+				if delayed && @start_delay.positive?
+					# Wait specified delay before starting the long task:
 					@delayed_start_task = Async do
 						sleep(@start_delay)
-						release_socket_accept_semaphore unless started?
+						self.acquire
+					rescue Async::Stop
+						# Gracefully exit on stop.
 					end
 				else
-					# Start the long task immediately
-					release_socket_accept_semaphore
+					# Start the long task immediately:
+					self.acquire
 				end
 			end
 			
 			# Stop the long task and restore connection token
-			def stop(force: false)
-				unless started?
-					# If we haven't started the long task yet, cancel the delayed start
-					if @delayed_start_task
-						@delayed_start_task.stop
-						@delayed_start_task = nil
-					end
-					return
+			def stop(force: false, **options)
+				if delayed_start_task = @delayed_start_task
+					@delayed_start_task = nil
+					delayed_start_task.stop
 				end
 				
-				# Release the long_task token first to avoid deadlocks
-				if @long_task_token
-					@long_task_token.release
-					@long_task_token = nil
+				unless options.key?(:priority)
+					# Re-acquire the connection token with high priority than inbound requests:
+					options[:priority] = 10
 				end
 				
-				@started = false
-				
-				# Reacquire socket accept token unless forced
-				unless force
-					# Reacquire socket accept token with high priority
-					if socket_accept_token && @socket_accept_semaphore
-						@socket_accept_token = @socket_accept_semaphore.reacquire
-					end
-				end
+				# Release the long task token:
+				release(force, **options)
 			end
 			
 			private
 			
-			def release_socket_accept_semaphore
-				@start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+			# This acquires the long task token and releases the connection token if it exists.
+			# This marks the beginning of a long task.
+			# @parameter options [Hash] The options to pass to the long task token acquisition.
+			def acquire(**options)
+				return if @token.acquired?
 				
-				# Wait if we've reached our limit of ongoing long tasks
-				@long_task_token = @long_task_semaphore.acquire(timeout: nil)
-				@started = true
-				
-				# Release the socket accept token
-				socket_accept_token&.release
-				
-				# Mark connection as non-persistent since we released the token
-				make_non_persistent
+				# Wait if we've reached our limit of ongoing long tasks.
+				if @token.acquire(**options)
+					# Release the socket accept token.
+					@connection_token&.release
+					
+					# Mark connection as non-persistent since we released the token.
+					make_non_persistent!
+				end
 			end
 			
-			def socket_accept_token
-				return @socket_accept_token if defined?(@socket_accept_token)
+			# This releases the long task token and re-acquires the connection token if it exists.
+			# This marks the end of a long task.
+			# @parameter force [Boolean] Whether to force the release of the long task token without re-acquiring the connection token.
+			# @parameter options [Hash] The options to pass to the connection token re-acquisition.
+			def release(force = false, **options)
+				return if @token.released?
 				
-				# Get token from connection if available
-				@socket_accept_token = @request&.connection&.stream&.io&.token
-			rescue NoMethodError
-				raise ConnectionWentAwayError
+				@token.release
+				
+				return if force
+				
+				# Re-acquire the connection token to prevent overloading the connection limiter:
+				@connection_token&.acquire(**options)
 			end
 			
-			def make_non_persistent
+			def make_non_persistent!
 				# Keeping the connection alive here is problematic because if the next request is slow,
 				# it will "block the server" since we have relinquished the token already.
 				@request&.connection&.persistent = false

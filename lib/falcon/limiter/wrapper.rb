@@ -4,48 +4,46 @@
 # Copyright, 2025, by Samuel Williams.
 
 require "io/endpoint/wrapper"
-require_relative "semaphore"
+require "async/limiter/token"
+require_relative "socket"
 
 module Falcon
 	module Limiter
 		# An endpoint wrapper that limits concurrent connections using a semaphore.
 		# This provides backpressure by limiting how many connections can be accepted simultaneously.
-		# Based on https://github.com/socketry/falcon/tree/main/examples/limited
 		class Wrapper < IO::Endpoint::Wrapper
-			def initialize(endpoint, semaphore: nil, **options)
-				super(endpoint, **options)
-				@semaphore = semaphore
+			# Initialize the wrapper with a connection limiter.
+			# @parameter limiter [Async::Limiter] The limiter instance for controlling concurrent connections.
+			def initialize(limiter)
+				super()
+				@limiter = limiter
 			end
 			
-			attr_reader :semaphore
+			attr_reader :limiter
 			
 			# Wait for an inbound connection to be ready to be accepted.
 			def wait_for_inbound_connection(server)
-				# Wait until there is a connection ready to be accepted:
 				loop do
+					# Wait until there is a connection ready to be accepted:
 					server.wait_readable
 					
-					# Acquire the semaphore:
-					if token = @semaphore&.acquire
+					# Acquire the limiter:
+					if token = Async::Limiter::Token.acquire(@limiter)
 						return token
 					end
 				end
 			end
 			
-			# Once the server is readable and we've acquired the token, 
-			# we can accept the connection (if it's still there).
+			# Once the server is readable and we've acquired the token, we can accept the connection (if it's still there).
 			def socket_accept_nonblock(server, token)
-				result = server.accept_nonblock
-				
-				success = true
-				result
+				socket = server.accept_nonblock
 			rescue IO::WaitReadable
 				nil
 			ensure
-				token&.release unless success
+				token.release unless socket
 			end
 			
-			# Accept a connection from the server, limited by the semaphore.
+			# Accept a connection from the server, limited by the per-worker (thread or process) semaphore.
 			def socket_accept(server)
 				socket = nil
 				address = nil
@@ -57,38 +55,13 @@ module Falcon
 					# In principle, there is a connection ready to be accepted:
 					socket, address = socket_accept_nonblock(server, token)
 					
-					if socket
-						break
-					end
+					break if socket
 				end
 				
-				# Provide access to the token, so that the connection limit 
-				# can be released prematurely if needed (for long tasks):
-				socket.define_singleton_method(:token) do
-					token
-				end
+				# Wrap socket with transparent token management
+				limited_socket = Socket.new(socket, token)
 				
-				# Provide a way to release the semaphore when the connection is closed:
-				socket.define_singleton_method(:close) do
-					super()
-				ensure
-					token&.release
-				end
-				
-				return socket, address
-			end
-			
-			# Provide statistics about connection limiting
-			def statistics
-				return {} unless @semaphore
-				
-				{
-					available: @semaphore.available_count,
-					acquired: @semaphore.acquired_count,
-					limit: @semaphore.limit,
-					waiting: @semaphore.waiting_count,
-					reacquire: @semaphore.reacquire_count
-				}
+				return limited_socket, address
 			end
 		end
 	end

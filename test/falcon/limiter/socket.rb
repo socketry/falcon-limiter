@@ -1,0 +1,73 @@
+# frozen_string_literal: true
+
+# Released under the MIT License.
+# Copyright, 2025, by Samuel Williams.
+
+require "falcon/limiter"
+
+describe Falcon::Limiter::Socket do
+	let(:limiter) {Falcon::Limiter::Semaphore.new(1)}
+	let(:token) {Async::Limiter::Token.acquire(limiter)}
+	
+	let(:mock_socket) do
+		Object.new.tap do |socket|
+			socket.define_singleton_method(:close) {@closed = true}
+			socket.define_singleton_method(:closed?) {@closed || false}
+			socket.define_singleton_method(:read) {"socket data"}
+			socket.define_singleton_method(:write) {|data| data.length}
+			socket.define_singleton_method(:inspect) {"#<MockSocket>"}
+			socket.define_singleton_method(:to_s) {"MockSocket"}
+			socket.define_singleton_method(:class) {Object}
+		end
+	end
+	
+	let(:limited_socket) {Falcon::Limiter::Socket.new(mock_socket, token)}
+	
+	it "provides transparent access to token" do
+		expect(limited_socket.token).to be == token
+	end
+	
+	it "delegates methods transparently to wrapped socket" do
+		# Test delegation
+		expect(limited_socket.read).to be == "socket data"
+		expect(limited_socket.write("test")).to be == 4
+		expect(limited_socket.closed?).to be == false
+	end
+	
+	it "responds to socket methods correctly" do
+		expect(limited_socket).to respond_to(:read)
+		expect(limited_socket).to respond_to(:write)
+		expect(limited_socket).to respond_to(:close)
+		expect(limited_socket).not.to respond_to(:nonexistent_method)
+	end
+	
+	it "releases token when closed" do
+		expect(token).not.to be(:released?)
+		
+		limited_socket.close
+		
+		expect(token).to be(:released?)
+		expect(limited_socket.closed?).to be == true
+	end
+	
+	it "provides proper inspection" do
+		inspect_result = limited_socket.inspect
+		expect(inspect_result.include?("Falcon::Limiter::Socket")).to be == true
+		expect(inspect_result.include?("Object")).to be == true
+		expect(inspect_result.include?("MockSocket")).to be == true
+	end
+	
+	it "provides proper string conversion" do
+		string_result = limited_socket.to_s
+		expect(string_result).to be == "MockSocket"
+	end
+	
+	it "delegates method_missing calls" do
+		# Add a custom method to the mock socket
+		mock_socket.define_singleton_method(:custom_method) {"custom result"}
+		
+		# Should delegate transparently
+		result = limited_socket.custom_method
+		expect(result).to be == "custom result"
+	end
+end

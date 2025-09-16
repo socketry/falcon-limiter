@@ -1,7 +1,8 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Basic example of using falcon-limiter for resource management
+# Released under the MIT License.
+# Copyright, 2025, by Samuel Williams.
 
 require_relative "../lib/falcon/limiter"
 
@@ -15,22 +16,22 @@ puts "Acquired resources: #{semaphore.acquired_count}"
 tasks = []
 
 10.times do |i|
-  tasks << Thread.new do
-    puts "Task #{i}: Waiting for resource..."
-    
-    # Acquire a resource token
-    token = semaphore.acquire
-    
-    puts "Task #{i}: Acquired resource (#{semaphore.available_count} remaining)"
-    
-    # Simulate work
-    sleep(rand * 2)
-    
-    # Release the resource
-    token.release
-    
-    puts "Task #{i}: Released resource (#{semaphore.available_count} available)"
-  end
+	tasks << Thread.new do
+		puts "Task #{i}: Waiting for resource..."
+		
+		# Acquire a resource token
+		token = semaphore.acquire
+		
+		puts "Task #{i}: Acquired resource (#{semaphore.available_count} remaining)"
+		
+		# Simulate work
+		sleep(rand * 2)
+		
+		# Release the resource
+		token.release
+		
+		puts "Task #{i}: Released resource (#{semaphore.available_count} available)"
+	end
 end
 
 # Wait for all tasks to complete

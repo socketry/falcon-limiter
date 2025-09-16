@@ -8,17 +8,17 @@ Advanced concurrency control and resource limiting for Falcon web server, built 
 
 This gem provides sophisticated concurrency management for Falcon applications by:
 
-- **Connection Limiting**: Control the number of concurrent connections to prevent server overload
-- **Long Task Management**: Handle I/O vs CPU bound workloads effectively by releasing resources during long operations
-- **Priority-based Resource Allocation**: Higher priority tasks get preferential access to limited resources
-- **Automatic Resource Cleanup**: Ensures proper resource release even when exceptions occur
-- **Built-in Statistics**: Monitor resource utilization and contention
+  - **Connection Limiting**: Control the number of concurrent connections to prevent server overload
+  - **Long Task Management**: Handle I/O vs CPU bound workloads effectively by releasing resources during long operations
+  - **Priority-based Resource Allocation**: Higher priority tasks get preferential access to limited resources
+  - **Automatic Resource Cleanup**: Ensures proper resource release even when exceptions occur
+  - **Built-in Statistics**: Monitor resource utilization and contention
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
-```ruby
+``` ruby
 gem 'falcon-limiter'
 ```
 
@@ -26,7 +26,7 @@ gem 'falcon-limiter'
 
 ### Basic Falcon Environment Integration
 
-```ruby
+``` ruby
 #!/usr/bin/env falcon-host
 
 require "falcon-limiter"
@@ -43,17 +43,14 @@ service "myapp.localhost" do
   
   rack_app do
     run lambda { |env|
-      # Access HTTP request directly
-      request = env["protocol.http.request"]
-      
       # Start long task for I/O bound work
-      request.long_task&.start
+      Falcon::Limiter::LongTask.current&.start
       
       # Long I/O operation (database query, external API call, etc.)
       external_api_call
       
       # Optional manual stop (auto-cleanup on response end)
-      request.long_task&.stop
+      Falcon::Limiter::LongTask.current&.stop
       
       [200, {}, ["OK"]]
     }
@@ -63,7 +60,7 @@ end
 
 ### Manual Middleware Setup
 
-```ruby
+``` ruby
 require "falcon-limiter"
 require "protocol/http/middleware"
 
@@ -79,7 +76,7 @@ end
 
 ### Direct Semaphore Usage
 
-```ruby
+``` ruby
 require "falcon-limiter"
 
 # Create a semaphore for database connections
@@ -101,7 +98,7 @@ end
 
 Configure limits using environment variables or programmatically:
 
-```bash
+``` bash
 export FALCON_LIMITER_MAX_LONG_TASKS=8
 export FALCON_LIMITER_MAX_ACCEPTS=2
 export FALCON_LIMITER_START_DELAY=0.6
@@ -109,7 +106,7 @@ export FALCON_LIMITER_START_DELAY=0.6
 
 Or in code:
 
-```ruby
+``` ruby
 Falcon::Limiter.configure do |config|
   config.max_long_tasks = 8
   config.max_accepts = 2
@@ -121,10 +118,10 @@ end
 
 Falcon Limiter is built on top of [async-limiter](https://github.com/socketry/async-limiter), providing:
 
-- **Thread-safe resource management** using priority queues
-- **Integration with Falcon's HTTP pipeline** through Protocol::HTTP::Middleware
-- **Automatic connection token management** for optimal resource utilization
-- **Priority-based task scheduling** to prevent resource starvation
+  - **Thread-safe resource management** using priority queues
+  - **Integration with Falcon's HTTP pipeline** through Protocol::HTTP::Middleware
+  - **Automatic connection token management** for optimal resource utilization
+  - **Priority-based task scheduling** to prevent resource starvation
 
 ## Development
 
@@ -134,18 +131,26 @@ After checking out the repo, run `bundle install` to install dependencies. Then,
 
 We welcome contributions to this project.
 
-1. Fork it
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
+1.  Fork it.
+2.  Create your feature branch (`git checkout -b my-new-feature`).
+3.  Commit your changes (`git commit -am 'Add some feature'`).
+4.  Push to the branch (`git push origin my-new-feature`).
+5.  Create new Pull Request.
+
+### Developer Certificate of Origin
+
+In order to protect users of this project, we require all contributors to comply with the [Developer Certificate of Origin](https://developercertificate.org/). This ensures that all contributions are properly licensed and attributed.
+
+### Community Guidelines
+
+This project is best served by a collaborative and respectful environment. Treat each other professionally, respect differing viewpoints, and engage constructively. Harassment, discrimination, or harmful behavior is not tolerated. Communicate clearly, listen actively, and support one another. If any issues arise, please inform the project maintainers.
+
+## Releases
+
+There are no documented releases.
 
 ## See Also
 
-- [falcon](https://github.com/socketry/falcon) - A fast, asynchronous, rack-compatible web server.
-- [async-limiter](https://github.com/socketry/async-limiter) - Execution rate limiting for Async.
-- [async](https://github.com/socketry/async) - A concurrency framework for Ruby.
-
-## License
-
-This project is licensed under the MIT License.
+  - [falcon](https://github.com/socketry/falcon) - A fast, asynchronous, rack-compatible web server.
+  - [async-limiter](https://github.com/socketry/async-limiter) - Execution rate limiting for Async.
+  - [async](https://github.com/socketry/async) - A concurrency framework for Ruby.

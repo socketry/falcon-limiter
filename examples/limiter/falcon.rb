@@ -1,6 +1,9 @@
 #!/usr/bin/env falcon-host
 # frozen_string_literal: true
 
+# Released under the MIT License.
+# Copyright, 2025, by Samuel Williams.
+
 require "falcon/limiter"
 
 service "limiter-example.localhost" do
@@ -9,13 +12,13 @@ service "limiter-example.localhost" do
 	# Configure limiter settings
 	limiter_configuration.max_long_tasks = 4
 	limiter_configuration.max_accepts = 2
-	limiter_configuration.start_delay = 0.1  # Shorter delay for demo
+	limiter_configuration.start_delay = 0.1 # Shorter delay for demo
 	
 	scheme "http"
 	url "http://localhost:9292"
 	
 	rack_app do
-		run lambda { |env|
+		run lambda {|env|
 			# Access HTTP request directly
 			request = env["protocol.http.request"]
 			path = env["PATH_INFO"]
@@ -23,7 +26,7 @@ service "limiter-example.localhost" do
 			case path
 			when "/fast"
 				# Fast request - no long task needed
-				[200, {"content-type" => "text/plain"}, ["Fast response: #{Time.now}"]]
+				[200, { "content-type" => "text/plain" }, ["Fast response: #{Time.now}"]]
 				
 			when "/slow"
 				# Slow I/O bound request - use long task
@@ -35,22 +38,22 @@ service "limiter-example.localhost" do
 				# Optional manual stop (auto-cleanup on response end)
 				request.long_task&.stop
 				
-				[200, {"content-type" => "text/plain"}, ["Slow response: #{Time.now}"]]
+				[200, { "content-type" => "text/plain" }, ["Slow response: #{Time.now}"]]
 				
 			when "/cpu"
 				# CPU bound request - don't use long task to prevent GVL contention
 				# Simulate CPU work
-				result = (1..1000000).sum
+				result = (1..1_000_000).sum
 				
-				[200, {"content-type" => "text/plain"}, ["CPU result: #{result}"]]
+				[200, { "content-type" => "text/plain" }, ["CPU result: #{result}"]]
 				
 			when "/stats"
 				# Show limiter statistics
 				stats = statistics
-				[200, {"content-type" => "application/json"}, [stats.to_json]]
+				[200, { "content-type" => "application/json" }, [stats.to_json]]
 				
 			else
-				[404, {"content-type" => "text/plain"}, ["Not found"]]
+				[404, { "content-type" => "text/plain" }, ["Not found"]]
 			end
 		}
 	end

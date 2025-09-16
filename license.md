@@ -1,32 +1,9 @@
 # MIT License
 
-Copyright, 2017-2025, by Samuel Williams.  
-Copyright, 2018, by Kent Gruber.  
-Copyright, 2018, by Janko Marohnić.  
-Copyright, 2018, by Tad Thorley.  
-Copyright, 2018, by Mitsutaka Mimura.  
-Copyright, 2018, by Kyle Tam.  
-Copyright, 2018, by Claudiu Garba.  
-Copyright, 2018, by Martin Hrdlicka.  
-Copyright, 2019, by Bryan Powell.  
-Copyright, 2019, by Sh Lin.  
-Copyright, 2019, by Sho Ito.  
-Copyright, 2019, by Colby Swandale.  
-Copyright, 2019-2024, by dependabot[bot].  
-Copyright, 2020, by Daniel Evans.  
-Copyright, 2020, by Mikel Kew.  
-Copyright, 2020, by Michael Adams.  
-Copyright, 2020, by Tasos Latsas.  
-Copyright, 2021, by Olle Jonsson.  
-Copyright, 2023, by Nick Janetakis.  
-Copyright, 2024, by Peter Schrammel.  
-Copyright, 2024, by Santiago Bartesaghi.  
-Copyright, 2024, by Trevor Turk.  
-Copyright, 2024, by Adam Daniels.  
-Copyright, 2024, by Stefan Buhrmester.  
-Copyright, 2024, by Ismael Celis.  
-Copyright, 2025, by Pierre Montelle.  
-Copyright, 2025, by Jared Smith.  
+Copyright, 2025, by Marc-André Cournoyer.  
+Copyright, 2025, by Francisco Mejia.  
+Copyright, 2025, by Josh Teeter.  
+Copyright, 2025, by Samuel Williams.  
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
