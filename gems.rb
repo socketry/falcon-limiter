@@ -7,9 +7,6 @@ source "https://rubygems.org"
 
 gemspec
 
-# Use local development version of async-limiter
-gem "async-limiter", git: "https://github.com/socketry/async-limiter.git"
-
 group :maintenance, optional: true do
 	gem "bake-gem"
 	gem "bake-modernize"
