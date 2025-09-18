@@ -24,6 +24,8 @@ gem 'falcon-limiter'
 
 ## Usage
 
+Please see the [project documentation](https://socketry.github.io/falcon-limiter/) for more details.
+
 ### Basic Falcon Environment Integration
 
 ``` ruby
@@ -147,7 +149,9 @@ This project is best served by a collaborative and respectful environment. Treat
 
 ## Releases
 
-There are no documented releases.
+Please see the [project releases](https://socketry.github.io/falcon-limiter/releases/index) for all releases.
+
+### v0.1.0
 
 ## See Also
 
