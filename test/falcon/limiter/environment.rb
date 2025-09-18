@@ -31,33 +31,24 @@ describe Falcon::Limiter::Environment do
 	
 	it "provides default configuration values" do
 		expect(evaluator.limiter_maximum_long_tasks).to be == 4
-		expect(evaluator.limiter_maximum_accepts).to be == 1
+		expect(evaluator.limiter_maximum_connections).to be == 1
 		expect(evaluator.limiter_start_delay).to be == 0.1
 	end
 	
-	it "provides semaphore options hash" do
-		options = evaluator.limiter_semaphore_options
-		
-		expect(options).to be_a(Hash)
-		expect(options[:maximum_long_tasks]).to be == 4
-		expect(options[:maximum_accepts]).to be == 1
-		expect(options[:start_delay]).to be == 0.1
-	end
-	
 	it "creates limiter from configuration" do
-		limiter = evaluator.limiter_semaphore
+		limiter = evaluator.connection_limiter
 		
 		expect(limiter).to be_a(Async::Limiter::Queued)
-		expect(limiter.queue.size).to be == 1 # Based on limiter_maximum_accepts
+		expect(limiter.queue.size).to be == 1 # Based on limiter_maximum_connections
 	end
 	
 	it "creates unified semaphore for coordination (memoized)" do
-		semaphore1 = evaluator.limiter_semaphore
-		semaphore2 = evaluator.limiter_semaphore
+		semaphore1 = evaluator.connection_limiter
+		semaphore2 = evaluator.connection_limiter
 		
 		expect(semaphore1).to be_a(Async::Limiter::Queued)
 		# Should return the same memoized instance
-		expect(semaphore2).to be == semaphore1
+		expect(semaphore2).to be_equal(semaphore1)
 	end
 	
 	it "wraps middleware correctly" do

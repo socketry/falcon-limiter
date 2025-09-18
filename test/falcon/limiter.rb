@@ -25,7 +25,7 @@ describe Falcon::Limiter do
 			
 			long_task = Falcon::Limiter::LongTask.for(request, long_task_limiter, start_delay: 0)
 			
-			expect(long_task.started?).to be == false
+			expect(long_task).not.to be(:started?)
 		end
 		
 		it "can stop without starting" do
@@ -38,7 +38,7 @@ describe Falcon::Limiter do
 			
 			# Should be able to stop without starting
 			long_task.stop
-			expect(long_task.started?).to be == false
+			expect(long_task).not.to be(:started?)
 		end
 	end
 	
@@ -49,7 +49,7 @@ describe Falcon::Limiter do
 			app = ->(_request) {[200, {}, ["OK"]]}
 			semaphore = Falcon::Limiter::Semaphore.new(2)
 			
-			middleware = Falcon::Limiter::Middleware.new(app, limiter: semaphore, maximum_long_tasks: 8)
+			middleware = Falcon::Limiter::Middleware.new(app, connection_limiter: semaphore, maximum_long_tasks: 8)
 			expect(middleware.connection_limiter).to be == semaphore
 			expect(middleware.long_task_limiter).to be_a(Async::Limiter::Queued)
 			expect(middleware.maximum_long_tasks).to be == 8
@@ -59,7 +59,7 @@ describe Falcon::Limiter do
 			app = ->(_request) {[200, {}, ["OK"]]}
 			semaphore = Falcon::Limiter::Semaphore.new(3)
 			
-			middleware = Falcon::Limiter::Middleware.new(app, limiter: semaphore, maximum_long_tasks: 5)
+			middleware = Falcon::Limiter::Middleware.new(app, connection_limiter: semaphore, maximum_long_tasks: 5)
 			stats = middleware.statistics
 			
 			expect(stats).to be_a(Hash)

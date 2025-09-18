@@ -123,7 +123,7 @@ describe Falcon::Limiter::Wrapper do
 			socket, address = wrapper.socket_accept(mock_server)
 			
 			expect(socket).not.to be_nil
-			expect(socket).to respond_to(:token)  # Should have token method
+			expect(socket).to respond_to(:token)
 			expect(socket.token).to be_a(Async::Limiter::Token)
 			expect(socket.token).not.to be(:released?)
 			

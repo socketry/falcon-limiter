@@ -39,7 +39,14 @@ module Falcon
 			# @parameter include_private [Boolean] Whether to include private methods (default: false).
 			# @returns [Boolean] True if either wrapper or delegate responds to the method.
 			def respond_to?(method, include_private = false)
-				super || @delegate.respond_to?(method, include_private)
+				# Check our own methods first (token, close, inspect, to_s, etc.)
+				case method.to_sym
+				when :token
+					true
+				else
+					# Check delegate for other methods
+					@delegate.respond_to?(method, include_private)
+				end
 			end
 			
 			# Support for method_missing delegation by checking delegate's methods.

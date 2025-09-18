@@ -24,7 +24,7 @@ describe Falcon::Limiter::Middleware do
 	let(:middleware) do
 		Falcon::Limiter::Middleware.new(
 			mock_app,
-			limiter: connection_limiter,
+			connection_limiter: connection_limiter,
 			maximum_long_tasks: 3,
 			start_delay: 0.01
 		)
@@ -64,7 +64,7 @@ describe Falcon::Limiter::Middleware do
 		# Middleware with no long tasks
 		no_long_task_middleware = Falcon::Limiter::Middleware.new(
 			mock_app,
-			limiter: connection_limiter,
+			connection_limiter: connection_limiter,
 			maximum_long_tasks: 0  # Disabled
 		)
 		
@@ -99,7 +99,7 @@ describe Falcon::Limiter::Middleware do
 		
 		failing_middleware = Falcon::Limiter::Middleware.new(
 			failing_app,
-			limiter: connection_limiter,
+			connection_limiter: connection_limiter,
 			maximum_long_tasks: 2
 		)
 		
@@ -123,7 +123,7 @@ describe Falcon::Limiter::Middleware do
 		
 		test_middleware = Falcon::Limiter::Middleware.new(
 			app_that_starts_long_task,
-			limiter: connection_limiter,
+			connection_limiter: connection_limiter,
 			maximum_long_tasks: 4,
 			start_delay: 0  # No delay for immediate start
 		)
@@ -178,7 +178,7 @@ describe Falcon::Limiter::Middleware do
 			# Wrap with Falcon::Limiter middleware
 			Falcon::Limiter::Middleware.new(
 				base_app,
-				limiter: connection_limiter,
+				connection_limiter: connection_limiter,
 				maximum_long_tasks: 2,
 				start_delay: 0.05
 			)

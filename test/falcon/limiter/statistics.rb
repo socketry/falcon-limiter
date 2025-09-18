@@ -10,7 +10,7 @@ describe "Statistics Coverage" do
 	
 	let(:middleware) do
 		app = lambda {|request| Protocol::HTTP::Response[200, {}, ["OK"]]}
-		Falcon::Limiter::Middleware.new(app, limiter: limiter, maximum_long_tasks: 3)
+		Falcon::Limiter::Middleware.new(app, connection_limiter: limiter, maximum_long_tasks: 3)
 	end
 	
 	it "covers limiter_stats method" do

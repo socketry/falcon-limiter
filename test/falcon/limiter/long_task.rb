@@ -33,66 +33,62 @@ describe Falcon::Limiter::LongTask do
 	end
 	
 	it "initializes correctly" do
-		connection_token = Async::Limiter::Token.acquire(connection_limiter)
-		long_task = Falcon::Limiter::LongTask.new(long_task_limiter, connection_token, start_delay: 0.1)
+		long_task = Falcon::Limiter::LongTask.new(mock_request, long_task_limiter, nil, start_delay: 0.1)
 		
-		expect(long_task.started?).to be == false
-		
-		# Clean up
-		connection_token.release
+		expect(long_task).not.to be(:started?)
 	end
 	
 	it "can start and stop long task immediately" do
 		long_task = Falcon::Limiter::LongTask.for(mock_request, long_task_limiter, start_delay: 0)
 		
-		expect(long_task.started?).to be == false
+		expect(long_task).not.to be(:started?)
 		
 		# Start immediately (no delay)
-		long_task.start(delayed: false)
-		expect(long_task.started?).to be == true
+		long_task.start(delay: 0)
+		expect(long_task).to be(:started?)
 		
 		# Stop the long task
 		long_task.stop
-		expect(long_task.started?).to be == false
+		expect(long_task).not.to be(:started?)
 	end
 	
 	it "can start with delay" do
 		long_task = Falcon::Limiter::LongTask.for(mock_request, long_task_limiter, start_delay: 0.01)
 		
 		# Start with delay
-		long_task.start(delayed: true)
-		expect(long_task.started?).to be == false  # Not started yet due to delay
+		long_task.start(delay: 0.01)
+		expect(long_task).not.to be(:acquired?)  # Not started yet due to delay
 		
 		# Wait for delay to complete
 		sleep(0.02)
-		expect(long_task.started?).to be == true
+		expect(long_task).to be(:acquired?)
 		
 		# Stop the long task
 		long_task.stop
-		expect(long_task.started?).to be == false
+		expect(long_task).not.to be(:acquired?)
 	end
 	
 	it "can stop before delayed start completes" do
 		long_task = Falcon::Limiter::LongTask.for(mock_request, long_task_limiter, start_delay: 0.1)
 		
 		# Start with delay
-		long_task.start(delayed: true)
-		expect(long_task.started?).to be == false
+		long_task.start(delay: 0.1)
+		expect(long_task).not.to be(:acquired?)
 		
 		# Stop before delay completes
 		long_task.stop
-		expect(long_task.started?).to be == false
+		expect(long_task).not.to be(:acquired?)
 	end
 	
 	it "can force stop" do
-		long_task = Falcon::Limiter::LongTask.for(mock_request,long_task_limiter, start_delay: 0)
+		long_task = Falcon::Limiter::LongTask.for(mock_request, long_task_limiter, start_delay: 0)
 		
 		# Start and then force stop
-		long_task.start(delayed: false)
-		expect(long_task.started?).to be == true
+		long_task.start(delay: 0)
+		expect(long_task).to be(:started?)
 		
 		long_task.stop(force: true)
-		expect(long_task.started?).to be == false
+		expect(long_task).not.to be(:started?)
 	end
 	
 	it "handles connection going away gracefully" do
@@ -103,11 +99,11 @@ describe Falcon::Limiter::LongTask do
 		
 		# Should handle missing connection gracefully (no exception raised)
 		expect do
-			long_task.start(delayed: false) 
+			long_task.start(delay: 0) 
 		end.not.to raise_exception
 		
 		# Long task should still work even without connection token
-		expect(long_task.started?).to be == true
+		expect(long_task).to be(:started?)
 	end
 	
 	it "handles connection without persistent flag" do
@@ -131,7 +127,7 @@ describe Falcon::Limiter::LongTask do
 		
 		# Should not crash when persistent flag is not supported
 		expect do
-			long_task.start(delayed: false)
+			long_task.start(delay: 0)
 		end.not.to raise_exception
 	end
 	
@@ -160,11 +156,11 @@ describe Falcon::Limiter::LongTask do
 		long_task = Falcon::Limiter::LongTask.for(request, long_task_limiter, start_delay: 0)
 		
 		# Start the long task which should acquire the token and make connection non-persistent
-		long_task.start(delayed: false)
+		long_task.start(delay: 0)
 		
 		# Verify the connection is now non-persistent
 		expect(persistent_connection.persistent).to be == false
-		expect(long_task.started?).to be == true
+		expect(long_task).to be(:started?)
 		
 		# Clean up
 		long_task.stop(force: true)

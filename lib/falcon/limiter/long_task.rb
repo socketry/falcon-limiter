@@ -72,7 +72,7 @@ module Falcon
 			end
 			
 			# Start the long task, optionally with a delay to avoid overhead for short operations
-			def start(start_delay: @start_delay)
+			def start(delay: @start_delay)
 				# If already started, nothing to do:
 				if started?
 					if block_given?
@@ -82,11 +82,21 @@ module Falcon
 					end
 				end
 				
+				if delay == true
+					delay = @start_delay
+				elsif delay == false
+					delay = nil
+				end
+				
+				def acquired?
+					@token.acquired?
+				end
+				
 				# Otherwise, start the long task:
-				if start_delay&.positive?
+				if delay&.positive?
 					# Wait specified delay before starting the long task:
 					@delayed_start_task = Async do
-						sleep(start_delay)
+						sleep(delay)
 						self.acquire
 					rescue Async::Stop
 						# Gracefully exit on stop.

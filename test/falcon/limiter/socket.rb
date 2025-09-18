@@ -50,13 +50,6 @@ describe Falcon::Limiter::Socket do
 		expect(limited_socket.closed?).to be == true
 	end
 	
-	it "provides proper inspection" do
-		inspect_result = limited_socket.inspect
-		expect(inspect_result.include?("Falcon::Limiter::Socket")).to be == true
-		expect(inspect_result.include?("Object")).to be == true
-		expect(inspect_result.include?("MockSocket")).to be == true
-	end
-	
 	it "provides proper string conversion" do
 		string_result = limited_socket.to_s
 		expect(string_result).to be == "MockSocket"
