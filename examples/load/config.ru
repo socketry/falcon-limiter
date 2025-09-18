@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "falcon/limiter/long_task"
 
 run do |env|
