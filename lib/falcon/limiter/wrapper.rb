@@ -43,6 +43,10 @@ module Falcon
 				token.release unless socket
 			end
 			
+			def wrap_socket(socket, token)
+				Socket.new(socket, token)
+			end
+			
 			# Accept a connection from the server, limited by the per-worker (thread or process) semaphore.
 			def socket_accept(server)
 				socket = nil
@@ -59,9 +63,7 @@ module Falcon
 				end
 				
 				# Wrap socket with transparent token management
-				limited_socket = Socket.new(socket, token)
-				
-				return limited_socket, address
+				return wrap_socket(socket, token), address
 			end
 		end
 	end

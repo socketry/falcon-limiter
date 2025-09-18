@@ -7,7 +7,7 @@ module Falcon
 	module Limiter
 		# A transparent socket wrapper that automatically manages token release.
 		# Behaves exactly like the wrapped socket but releases the limiter token on close.
-		class Socket
+		class Socket < BasicObject
 			# Initialize the socket wrapper with delegation and token management.
 			# @parameter delegate [Object] The socket object to wrap and delegate to.
 			# @parameter token [Async::Limiter::Token] The limiter token to release when socket closes.
@@ -30,8 +30,8 @@ module Falcon
 			end
 			
 			# Transparent delegation to the wrapped delegate.
-			def method_missing(method, *args, &block)
-				@delegate.send(method, *args, &block)
+			def method_missing(...)
+				@delegate.public_send(...)
 			end
 			
 			# Check if this wrapper or the delegate responds to a method.

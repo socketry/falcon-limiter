@@ -15,15 +15,15 @@ module Falcon
 		class Middleware < Protocol::HTTP::Middleware
 			# Initialize the middleware with limiting configuration.
 			# @parameter delegate [Object] The next middleware in the chain to call.
-			# @parameter limiter [Async::Limiter] Connection limiter instance for managing accepts.
+			# @parameter connection_limiter [Async::Limiter] Connection limiter instance for managing accepts.
 			# @parameter maximum_long_tasks [Integer] Maximum number of concurrent long tasks (default: 4).
 			# @parameter start_delay [Float] Delay in seconds before starting long tasks (default: 0.1).
-			def initialize(delegate, limiter:, maximum_long_tasks: 4, start_delay: 0.1)
+			def initialize(delegate, connection_limiter:, maximum_long_tasks: 4, start_delay: 0.1)
 				super(delegate)
 				
 				@maximum_long_tasks = maximum_long_tasks
 				@start_delay = start_delay
-				@connection_limiter = limiter
+				@connection_limiter = connection_limiter
 				@long_task_limiter = Semaphore.new(maximum_long_tasks)
 			end
 			

@@ -23,7 +23,7 @@ module Falcon
 			end
 			
 			# @returns [Integer] The maximum number of concurrent connection accepts.
-			def limiter_maximum_accepts
+			def limiter_maximum_connections
 				1
 			end
 			
@@ -32,20 +32,11 @@ module Falcon
 				0.1
 			end
 			
-			# @returns [Hash] Configuration options for the semaphore.
-			def limiter_semaphore_options
-				{
-					maximum_long_tasks: limiter_maximum_long_tasks,
-					maximum_accepts: limiter_maximum_accepts,
-					start_delay: limiter_start_delay
-				}
-			end
-			
 			# @returns [Async::Limiter::Queued] The limiter for coordinating long tasks and connection accepts.
-			def limiter_semaphore
+			def connection_limiter
 				# Create priority queue and pre-populate with tokens:
 				queue = Async::PriorityQueue.new
-				limiter_maximum_accepts.times{queue.push(true)}
+				limiter_maximum_connections.times{queue.push(true)}
 				
 				Async::Limiter::Queued.new(queue)
 			end
@@ -61,7 +52,7 @@ module Falcon
 				if limiter_maximum_long_tasks&.positive?
 					limiter_middleware_class.new(
 						middleware, 
-						limiter: limiter_semaphore,
+						connection_limiter: connection_limiter,
 						maximum_long_tasks: limiter_maximum_long_tasks,
 						start_delay: limiter_start_delay
 					)
@@ -75,9 +66,13 @@ module Falcon
 				limiter_middleware(super)
 			end
 			
+			def limiter_wrapper
+				Wrapper.new(connection_limiter)
+			end
+			
 			# @returns [IO::Endpoint::Wrapper] The endpoint with connection limiting.
 			def endpoint
-				super.with(wrapper: Wrapper.new(limiter_semaphore))
+				super.with(wrapper: limiter_wrapper)
 			end
 		end
 	end

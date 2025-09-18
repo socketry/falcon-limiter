@@ -16,6 +16,9 @@ module Falcon
 		#
 		# A long task is any long (1+ sec) operation that isn't CPU-bound (usually long I/O). Starting a long task lets the server accept one more (potentially CPU-bound) request. This allows us to handle many concurrent I/O bound requests, without adding contention (which impacts latency).
 		class LongTask
+			# The priority to use when stopping a long task to re-acquire the connection token.
+			STOP_PRIORITY = 1000
+			
 			# @returns [LongTask] The current long task.
 			def self.current
 				Fiber.current.falcon_limiter_long_task
@@ -65,25 +68,42 @@ module Falcon
 			# Check if the long task has been started.
 			# @returns [Boolean] True if the long task token has been acquired, false otherwise.
 			def started?
-				@token.acquired?
+				@token.acquired? || @delayed_start_task
 			end
 			
 			# Start the long task, optionally with a delay to avoid overhead for short operations
-			def start(delayed: true)
-				# We already have a long task token, so we don't need to start a new one:
-				return if @token.acquired?
+			def start(start_delay: @start_delay)
+				# If already started, nothing to do:
+				if started?
+					if block_given?
+						return yield self
+					else
+						return self
+					end
+				end
 				
-				if delayed && @start_delay.positive?
+				# Otherwise, start the long task:
+				if start_delay&.positive?
 					# Wait specified delay before starting the long task:
 					@delayed_start_task = Async do
-						sleep(@start_delay)
+						sleep(start_delay)
 						self.acquire
 					rescue Async::Stop
 						# Gracefully exit on stop.
+					ensure
+						@delayed_start_task = nil
 					end
 				else
 					# Start the long task immediately:
 					self.acquire
+				end
+				
+				return self unless block_given?
+				
+				begin
+					yield self
+				ensure
+					self.stop
 				end
 			end
 			
@@ -94,10 +114,8 @@ module Falcon
 					delayed_start_task.stop
 				end
 				
-				unless options.key?(:priority)
-					# Re-acquire the connection token with high priority than inbound requests:
-					options[:priority] = 10
-				end
+				# Re-acquire the connection token with high priority than inbound requests:
+				options[:priority] ||= STOP_PRIORITY
 				
 				# Release the long task token:
 				release(force, **options)
