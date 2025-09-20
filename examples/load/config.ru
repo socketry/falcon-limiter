@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "console"
 require "falcon/limiter/long_task"
 
 run do |env|
@@ -13,6 +14,9 @@ run do |env|
 	when "/cpu"
 		Console.info(self, "Starting \"CPU intensive\" task...")
 		sleep(10)
+	else
+		Console.info(self, "Unknown path: #{path}")
+		return [404, {"content-type" => "text/plain"}, ["Not Found"]]
 	end
 
 	Console.info(self, "Request completed");

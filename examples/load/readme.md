@@ -32,6 +32,11 @@ Note that the server is starting with a wrapper `Falcon::Limiter::Wrapper` which
 Make several requests to the `/cpu` path:
 
 ```bash
+# Start multiple requests in background
+$ curl http://localhost:9292/cpu &
+$ curl http://localhost:9292/cpu &
+$ curl http://localhost:9292/cpu &
+
 $ curl -v http://localhost:9292/cpu
 ```
 
@@ -42,11 +47,41 @@ You will note that these will be sequential as the connection limiter is limited
 Make several requests to the `/io` path:
 
 ```bash
+# These will run concurrently (up to the long task limit)
+$ curl http://localhost:9292/io &
+$ curl http://localhost:9292/io &
+$ curl http://localhost:9292/io &
+$ curl http://localhost:9292/io &
+
 $ curl -v http://localhost:9292/io
 ```
 
-You will note that these will be concurrent as the connection limiter is released once `LongTask.current.start` is invoked.
+You will note that these will be concurrent, as the connection limiter is released once `LongTask.current.start` is invoked.
+
+Also note that in order to prevent persistent connections from overloading the limiter, once a connection handles an "IO"-bound request, it will be marked as non-persistent (`connection: close`). This prevents us from having several "IO"-bound requests and a "CPU"-bound request from exceeding the limit on "CPU"-bound requests, by preventing a connection that was handling an "IO"-bound request from submitting a "CPU"-bound request (or otherwise hanging while waiting on the connection limiter).
+
+## Mixed Workload Testing
 
 In addition, if you perform a "CPU"-bound request after starting several "IO"-bound requests, a single "CPU"-bound request will be allowed, but until it completes, no further connections will be accepted.
 
-Finally, in order to prevent persistent connections from overloading the limiter, once a connection handles an "IO"-bound request, it will be marked as non-persistent (`connection: close`). This prevents us from having several "IO"-bound requests and a "CPU"-bound request from exceeding the limit on "CPU"-bound requests, by preventing a connection that was handling an "IO"-bound request from submitting a "CPU"-bound request (or otherwise hanging while waiting on the connection limiter).
+To see the limiter behavior with mixed workloads:
+
+```bash
+# Start several I/O requests
+$ curl http://localhost:9292/io &
+$ curl http://localhost:9292/io &
+$ curl http://localhost:9292/io &
+
+# Then try a CPU request (should be queued until I/O requests complete)
+$ curl http://localhost:9292/cpu
+```
+
+## Configuration
+
+The example is configured with:
+- **Connection limit**: 1 (only 1 connection accepted at a time).
+- **Long task limit**: 4 (up to 4 concurrent I/O operations).
+- **Start delay**: 0.1 seconds (delay before releasing connection token).
+- **Workers**: 1 (single process for predictable behavior).
+
+You can modify these values in `falcon.rb` by overriding the environment methods.

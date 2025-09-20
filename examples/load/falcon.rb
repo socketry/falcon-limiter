@@ -12,7 +12,7 @@ service "hello.localhost" do
 	include Falcon::Limiter::Environment
 	
 	endpoint do
-		Async::HTTP::Endpoint.parse("http://localhost:9293").with(wrapper: limiter_wrapper)
+		Async::HTTP::Endpoint.parse("http://localhost:9292").with(wrapper: limiter_wrapper)
 	end
 	
 	count {1}
