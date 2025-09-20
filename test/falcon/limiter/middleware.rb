@@ -248,4 +248,14 @@ describe Falcon::Limiter::Middleware do
 			response.close
 		end
 	end
+	
+	with "#statistics" do
+		it "provides statistics" do
+			statistics = middleware.statistics
+			
+			expect(statistics).to be_a(Hash)
+			expect(statistics[:long_task_limiter]).to be_a(Hash)
+			expect(statistics[:connection_limiter]).to be_a(Hash)
+		end
+	end
 end

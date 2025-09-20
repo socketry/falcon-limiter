@@ -65,10 +65,16 @@ module Falcon
 				@delayed_start_task = nil
 			end
 			
-			# Check if the long task has been started.
-			# @returns [Boolean] True if the long task token has been acquired, false otherwise.
+			# Check if the long task has been started, but not necessarily acquired (e.g. if there was a delay).
+			# @returns [Boolean] If the long task has been started.
 			def started?
 				@token.acquired? || @delayed_start_task
+			end
+			
+			# Check if the long task has been acquired.
+			# @returns [Boolean] If the long task token has been acquired.
+			def acquired?
+				@token.acquired?
 			end
 			
 			# Start the long task, optionally with a delay to avoid overhead for short operations
@@ -86,10 +92,6 @@ module Falcon
 					delay = @start_delay
 				elsif delay == false
 					delay = nil
-				end
-				
-				def acquired?
-					@token.acquired?
 				end
 				
 				# Otherwise, start the long task:

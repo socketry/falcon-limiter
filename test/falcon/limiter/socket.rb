@@ -38,8 +38,27 @@ describe Falcon::Limiter::Socket do
 		expect(limited_socket).to respond_to(:read)
 		expect(limited_socket).to respond_to(:write)
 		expect(limited_socket).to respond_to(:close)
+		expect(limited_socket).to respond_to(:token)
 		expect(limited_socket).not.to respond_to(:nonexistent_method)
 	end
+	
+	it "handles respond_to_missing? correctly" do
+		# Add a method to the delegate after socket creation
+		mock_socket.define_singleton_method(:new_method) {"new method"}
+		
+		# Should delegate respond_to? check to the delegate
+		expect(limited_socket).to respond_to(:new_method)
+		expect(limited_socket).not.to respond_to(:truly_missing_method)
+		
+		# Test respond_to_missing? directly
+		expect(limited_socket.respond_to?(:new_method)).to be == true
+		expect(limited_socket.respond_to?(:truly_missing_method)).to be == false
+		
+		# Test respond_to_missing? with a method that neither delegate nor super responds to
+		# This should trigger the || super path in respond_to_missing?
+		expect(limited_socket.respond_to?(:completely_unknown_method)).to be == false
+	end
+	
 	
 	it "releases token when closed" do
 		expect(token).not.to be(:released?)

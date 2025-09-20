@@ -38,6 +38,15 @@ describe Falcon::Limiter::LongTask do
 		expect(long_task).not.to be(:started?)
 	end
 	
+	it "can stop without starting" do
+		long_task = Falcon::Limiter::LongTask.for(mock_request, long_task_limiter, start_delay: 0.01)
+		
+		# Should be able to stop without starting
+		long_task.stop
+		
+		expect(long_task).not.to be(:started?)
+	end
+	
 	it "can start and stop long task immediately" do
 		long_task = Falcon::Limiter::LongTask.for(mock_request, long_task_limiter, start_delay: 0)
 		
@@ -165,5 +174,82 @@ describe Falcon::Limiter::LongTask do
 		# Clean up
 		long_task.stop(force: true)
 		token.release
+	end
+	
+	it "handles connection without persistent support gracefully" do
+		# Create a request with connection that doesn't support persistent flag
+		broken_connection = Object.new
+		broken_connection.define_singleton_method(:stream) {nil}
+		# No persistent= method defined - should trigger NoMethodError rescue
+		
+		request = Object.new
+		request.define_singleton_method(:connection) {broken_connection}
+		
+		long_task = Falcon::Limiter::LongTask.for(request, long_task_limiter, start_delay: 0)
+		
+		# This should not raise an error even though connection doesn't support persistent flag
+		expect {long_task.start(delay: 0)}.not.to raise_exception
+		
+		# Clean up
+		long_task.stop(force: true)
+	end
+	
+	it "handles delay parameter variations" do
+		long_task = Falcon::Limiter::LongTask.new(nil, long_task_limiter, nil, start_delay: 0.05)
+		
+		# Test delay: true (should use @start_delay):
+		long_task.start(delay: true)
+		expect(long_task).to be(:started?)
+		long_task.stop(force: true)
+		
+		# Test delay: false (should be immediate):
+		long_task2 = Falcon::Limiter::LongTask.new(nil, long_task_limiter, nil, start_delay: 0.05)
+		long_task2.start(delay: false)
+		expect(long_task2).to be(:started?)
+		long_task2.stop(force: true)
+	end
+	
+	it "provides acquired? method on started long task" do
+		long_task = Falcon::Limiter::LongTask.new(nil, long_task_limiter)
+		
+		# Start the long task and test the acquired? method that gets defined
+		long_task.start(delay: 0) do |task|
+			# The acquired? method should be available within the block
+			expect(task).to respond_to(:acquired?)
+			expect(task.acquired?).to be == true
+		end
+	end
+	
+	it "handles already started long task with block" do
+		long_task = Falcon::Limiter::LongTask.new(nil, long_task_limiter)
+		
+		# Start the long task first
+		long_task.start(delay: 0)
+		expect(long_task).to be(:started?)
+		
+		# Try to start again with block - should return result from block
+		result = long_task.start do |task|
+			"block executed"
+		end
+		
+		expect(result).to be == "block executed"
+		
+		# Clean up
+		long_task.stop(force: true)
+	end
+	
+	it "handles already started long task without block" do
+		long_task = Falcon::Limiter::LongTask.new(nil, long_task_limiter)
+		
+		# Start the long task first
+		long_task.start(delay: 0)
+		expect(long_task).to be(:started?)
+		
+		# Try to start again without block - should return self
+		result = long_task.start
+		expect(result).to be == long_task
+		
+		# Clean up
+		long_task.stop(force: true)
 	end
 end

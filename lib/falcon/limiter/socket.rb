@@ -49,17 +49,9 @@ module Falcon
 				end
 			end
 			
-			# Support for method_missing delegation by checking delegate's methods.
-			# @parameter method [Symbol] The method name to check.
-			# @parameter include_private [Boolean] Whether to include private methods (default: false).
-			# @returns [Boolean] True if the delegate responds to the method.
-			def respond_to_missing?(method, include_private = false)
-				@delegate.respond_to?(method, include_private) || super
-			end
-			
 			# Forward common inspection methods
 			def inspect
-				"#<#{self.class}(#{@delegate.class}) #{@delegate.inspect}>"
+				"#<#{Socket} #{@delegate.inspect}>"
 			end
 			
 			# String representation of the wrapped socket.
