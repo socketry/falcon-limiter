@@ -18,7 +18,7 @@ run do |env|
 		Console.info(self, "Unknown path: #{path}")
 		return [404, {"content-type" => "text/plain"}, ["Not Found"]]
 	end
-
+	
 	Console.info(self, "Request completed");
 	
 	[200, {"content-type" => "text/plain"}, ["Hello from Falcon Limiter!"]]
