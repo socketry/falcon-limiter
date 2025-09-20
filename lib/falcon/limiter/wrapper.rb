@@ -43,6 +43,10 @@ module Falcon
 				token.release unless socket
 			end
 			
+			# Wrap the socket with a transparent token management.
+			# @parameter socket [Object] The socket to wrap.
+			# @parameter token [Async::Limiter::Token] The limiter token to release when socket closes.
+			# @returns [Falcon::Limiter::Socket] The wrapped socket.
 			def wrap_socket(socket, token)
 				Socket.new(socket, token)
 			end

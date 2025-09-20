@@ -66,6 +66,7 @@ module Falcon
 				limiter_middleware(super)
 			end
 			
+			# @returns [Falcon::Limiter::Wrapper] The wrapper for the connection limiter.
 			def limiter_wrapper
 				Wrapper.new(connection_limiter)
 			end
