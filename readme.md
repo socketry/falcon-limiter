@@ -153,6 +153,8 @@ Please see the [project releases](https://socketry.github.io/falcon-limiter/rele
 
 ### v0.1.0
 
+  - Initial implementation.
+
 ## See Also
 
   - [falcon](https://github.com/socketry/falcon) - A fast, asynchronous, rack-compatible web server.
