@@ -1,0 +1,16 @@
+# Automatically generated context index for Utopia::Project guides.
+# Do not edit then files in this directory directly, instead edit the guides and then run `bake utopia:project:agent:context:update`.
+---
+description: Advanced concurrency control and resource limiting for Falcon web server.
+metadata:
+  documentation_uri: https://socketry.github.io/falcon-limiter/
+  source_code_uri: https://github.com/socketry/falcon-limiter.git
+files:
+- path: getting-started.md
+  title: Getting Started
+  description: This guide explains how to get started with `falcon-limiter` for advanced
+    concurrency control and resource limiting in Falcon web applications.
+- path: long-tasks.md
+  title: Long Tasks
+  description: This guide explains how to use <code class="language-ruby">Falcon::Limiter::LongTask</code>
+    to effectively manage I/O vs CPU bound workloads in your Falcon applications.
