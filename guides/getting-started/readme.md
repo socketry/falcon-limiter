@@ -114,22 +114,3 @@ service "myapp.localhost" do
 	end
 end
 ```
-
-## Testing Your Setup
-
-You can test the behavior using the included [load example](../../examples/load/):
-
-```bash
-# Start the server
-$ cd examples/load
-$ bundle exec ./falcon.rb
-
-# In another terminal, test CPU-bound requests (will be sequential)
-$ curl http://localhost:9292/cpu &
-$ curl http://localhost:9292/cpu &
-
-# Test I/O-bound requests (will be concurrent)
-$ curl http://localhost:9292/io &
-$ curl http://localhost:9292/io &
-$ curl http://localhost:9292/io &
-```
