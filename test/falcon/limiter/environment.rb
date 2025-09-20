@@ -30,7 +30,7 @@ describe Falcon::Limiter::Environment do
 	let(:evaluator) {environment.evaluator}
 	
 	it "provides default configuration values" do
-		expect(evaluator.limiter_maximum_long_tasks).to be == 4
+		expect(evaluator.limiter_maximum_long_tasks).to be == 10
 		expect(evaluator.limiter_maximum_connections).to be == 1
 		expect(evaluator.limiter_start_delay).to be == 0.1
 	end
@@ -55,7 +55,7 @@ describe Falcon::Limiter::Environment do
 		middleware = evaluator.middleware
 		
 		expect(middleware).to be_a(Falcon::Limiter::Middleware)
-		expect(middleware.maximum_long_tasks).to be == 4
+		expect(middleware.maximum_long_tasks).to be == 10
 		expect(middleware.start_delay).to be == 0.1
 		expect(middleware.connection_limiter).to be_a(Async::Limiter::Queued)
 	end
