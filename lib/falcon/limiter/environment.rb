@@ -15,11 +15,11 @@ module Falcon
 		# Provides simple, declarative configuration for concurrency limiting.
 		# Override these methods in your service to customize behavior.
 		module Environment
-			# Maximum number of concurrent long tasks (default: 4).
+			# Maximum number of concurrent long tasks (default: 10).
 			# If this is nil or non-positive, long task support will be disabled.
 			# @returns [Integer] The maximum number of concurrent long tasks.
 			def limiter_maximum_long_tasks
-				4
+				10
 			end
 			
 			# @returns [Integer] The maximum number of concurrent connection accepts.

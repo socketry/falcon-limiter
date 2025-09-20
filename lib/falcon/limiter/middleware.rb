@@ -16,9 +16,9 @@ module Falcon
 			# Initialize the middleware with limiting configuration.
 			# @parameter delegate [Object] The next middleware in the chain to call.
 			# @parameter connection_limiter [Async::Limiter] Connection limiter instance for managing accepts.
-			# @parameter maximum_long_tasks [Integer] Maximum number of concurrent long tasks (default: 4).
+			# @parameter maximum_long_tasks [Integer] Maximum number of concurrent long tasks (default: 10).
 			# @parameter start_delay [Float] Delay in seconds before starting long tasks (default: 0.1).
-			def initialize(delegate, connection_limiter:, maximum_long_tasks: 4, start_delay: 0.1)
+			def initialize(delegate, connection_limiter:, maximum_long_tasks: 10, start_delay: 0.1)
 				super(delegate)
 				
 				@maximum_long_tasks = maximum_long_tasks
