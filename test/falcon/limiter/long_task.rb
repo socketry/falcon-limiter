@@ -17,18 +17,18 @@ describe Falcon::Limiter::LongTask do
 		token = Async::Limiter::Token.acquire(connection_limiter)
 		
 		io = Object.new
-		io.define_singleton_method(:token) {token}
+		io.define_singleton_method(:token){token}
 		
 		stream = Object.new  
-		stream.define_singleton_method(:io) {io}
+		stream.define_singleton_method(:io){io}
 		
 		connection = Object.new
-		connection.define_singleton_method(:stream) {stream}
-		connection.define_singleton_method(:persistent=) {|value| @persistent = value}
-		connection.define_singleton_method(:persistent) {@persistent}
+		connection.define_singleton_method(:stream){stream}
+		connection.define_singleton_method(:persistent=){|value| @persistent = value}
+		connection.define_singleton_method(:persistent){@persistent}
 		
 		request = Object.new
-		request.define_singleton_method(:connection) {connection}
+		request.define_singleton_method(:connection){connection}
 		request
 	end
 	
@@ -120,17 +120,17 @@ describe Falcon::Limiter::LongTask do
 		token = Async::Limiter::Token.acquire(connection_limiter)
 		
 		io = Object.new
-		io.define_singleton_method(:token) {token}
+		io.define_singleton_method(:token){token}
 		
 		stream = Object.new  
-		stream.define_singleton_method(:io) {io}
+		stream.define_singleton_method(:io){io}
 		
 		connection = Object.new
-		connection.define_singleton_method(:stream) {stream}
+		connection.define_singleton_method(:stream){stream}
 		# No persistent= method defined
 		
 		request = Object.new
-		request.define_singleton_method(:connection) {connection}
+		request.define_singleton_method(:connection){connection}
 		
 		long_task = Falcon::Limiter::LongTask.for(request, long_task_limiter, start_delay: 0)
 		
@@ -145,22 +145,22 @@ describe Falcon::Limiter::LongTask do
 		token = Async::Limiter::Token.acquire(connection_limiter)
 		
 		io = Object.new
-		io.define_singleton_method(:token) {token}
+		io.define_singleton_method(:token){token}
 		
 		stream = Object.new  
-		stream.define_singleton_method(:io) {io}
+		stream.define_singleton_method(:io){io}
 		
 		persistent_connection = Object.new
-		persistent_connection.define_singleton_method(:stream) {stream}
-		persistent_connection.define_singleton_method(:persistent) {@persistent}
-		persistent_connection.define_singleton_method(:persistent=) {|value| @persistent = value}
+		persistent_connection.define_singleton_method(:stream){stream}
+		persistent_connection.define_singleton_method(:persistent){@persistent}
+		persistent_connection.define_singleton_method(:persistent=){|value| @persistent = value}
 		
 		# Set initial state to persistent
 		persistent_connection.persistent = true
 		expect(persistent_connection.persistent).to be == true
 		
 		request = Object.new
-		request.define_singleton_method(:connection) {persistent_connection}
+		request.define_singleton_method(:connection){persistent_connection}
 		
 		long_task = Falcon::Limiter::LongTask.for(request, long_task_limiter, start_delay: 0)
 		
@@ -179,16 +179,16 @@ describe Falcon::Limiter::LongTask do
 	it "handles connection without persistent support gracefully" do
 		# Create a request with connection that doesn't support persistent flag
 		broken_connection = Object.new
-		broken_connection.define_singleton_method(:stream) {nil}
+		broken_connection.define_singleton_method(:stream){nil}
 		# No persistent= method defined - should trigger NoMethodError rescue
 		
 		request = Object.new
-		request.define_singleton_method(:connection) {broken_connection}
+		request.define_singleton_method(:connection){broken_connection}
 		
 		long_task = Falcon::Limiter::LongTask.for(request, long_task_limiter, start_delay: 0)
 		
 		# This should not raise an error even though connection doesn't support persistent flag
-		expect {long_task.start(delay: 0)}.not.to raise_exception
+		expect{long_task.start(delay: 0)}.not.to raise_exception
 		
 		# Clean up
 		long_task.stop(force: true)

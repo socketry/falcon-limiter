@@ -44,8 +44,8 @@ describe Falcon::Limiter::Wrapper do
 			end
 			
 			# Helper methods for test control
-			server.define_singleton_method(:set_blocking) {|block| should_block = block}
-			server.define_singleton_method(:accept_count) {accept_count}
+			server.define_singleton_method(:set_blocking){|block| should_block = block}
+			server.define_singleton_method(:accept_count){accept_count}
 		end
 	end
 	
@@ -156,7 +156,7 @@ describe Falcon::Limiter::Wrapper do
 		tasks.each(&:wait)
 		
 		expect(results.length).to be == 3
-		expect(results.all? {|r| r[:socket]}).to be == true
+		expect(results.all?{|r| r[:socket]}).to be == true
 		expect(limiter.queue.size).to be == 2  # All tokens returned
 	end
 	
@@ -175,10 +175,10 @@ describe Falcon::Limiter::Wrapper do
 				socket, address = wrapper.socket_accept(mock_server)
 				
 				results << { 
-																				task_id: i, 
-																				socket: socket,
-																				wait_time: Time.now - start_time
-																}
+					task_id: i, 
+					socket: socket,
+					wait_time: Time.now - start_time
+				}
 				
 				completed += 1
 				socket.close
@@ -199,8 +199,8 @@ describe Falcon::Limiter::Wrapper do
 		expect(limiter.queue.size).to be == 2  # All tokens returned
 		
 		# At least some tasks should have waited
-		wait_times = results.map {|r| r[:wait_time]}
-		expect(wait_times.any? {|t| t > 0.04}).to be == true
+		wait_times = results.map{|r| r[:wait_time]}
+		expect(wait_times.any?{|t| t > 0.04}).to be == true
 	end
 	
 	it "properly releases tokens on connection errors" do
@@ -208,7 +208,7 @@ describe Falcon::Limiter::Wrapper do
 		
 		# Mock server that always throws IO::WaitReadable
 		error_server = Object.new
-		error_server.define_singleton_method(:wait_readable) {}
+		error_server.define_singleton_method(:wait_readable){}
 		error_server.define_singleton_method(:accept_nonblock) do
 			error = Errno::EAGAIN.new("Resource temporarily unavailable")
 			error.extend(IO::WaitReadable)

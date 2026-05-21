@@ -35,18 +35,18 @@ describe Falcon::Limiter::Middleware do
 		token = Async::Limiter::Token.acquire(connection_limiter)
 		
 		io = Object.new
-		io.define_singleton_method(:token) {token}
+		io.define_singleton_method(:token){token}
 		
 		stream = Object.new  
-		stream.define_singleton_method(:io) {io}
+		stream.define_singleton_method(:io){io}
 		
 		connection = Object.new
-		connection.define_singleton_method(:stream) {stream}
-		connection.define_singleton_method(:persistent=) {|value| @persistent = value}
-		connection.define_singleton_method(:persistent) {@persistent}
+		connection.define_singleton_method(:stream){stream}
+		connection.define_singleton_method(:persistent=){|value| @persistent = value}
+		connection.define_singleton_method(:persistent){@persistent}
 		
 		request = Protocol::HTTP::Request.new
-		request.define_singleton_method(:connection) {connection}
+		request.define_singleton_method(:connection){connection}
 		request
 	end
 	
@@ -91,11 +91,11 @@ describe Falcon::Limiter::Middleware do
 		
 		expect(response).to be_a(Protocol::HTTP::Response)
 		# Should not crash with different body types
-		expect {response.body.close if response.body.respond_to?(:close)}.not.to raise_exception
+		expect{response.body.close if response.body.respond_to?(:close)}.not.to raise_exception
 	end
 	
 	it "handles middleware exceptions" do
-		failing_app = lambda {|request| raise "Middleware error"}
+		failing_app = lambda{|request| raise "Middleware error"}
 		
 		failing_middleware = Falcon::Limiter::Middleware.new(
 			failing_app,
@@ -113,7 +113,7 @@ describe Falcon::Limiter::Middleware do
 	
 	it "wraps response body when long task is started by application" do
 		# Create an app that starts a long task (like the example shows)
-		app_that_starts_long_task = lambda {|request|
+		app_that_starts_long_task = lambda{|request|
 			# Application calls start on the long task (like in the example)
 			Falcon::Limiter::LongTask.current&.start
 			

@@ -14,15 +14,16 @@ group :maintenance, optional: true do
 	
 	gem "agent-context"
 	
+	gem "decode"
+	
 	gem "utopia-project"
 end
 
 group :test do
 	gem "sus"
 	gem "covered"
-	gem "decode"
-	
 	gem "rubocop"
+	gem "rubocop-md"
 	gem "rubocop-socketry"
 	
 	gem "async-service"

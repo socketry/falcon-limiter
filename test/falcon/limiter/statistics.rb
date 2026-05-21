@@ -9,7 +9,7 @@ describe "Statistics Coverage" do
 	let(:limiter) {Falcon::Limiter::Semaphore.new(2)}
 	
 	let(:middleware) do
-		app = lambda {|request| Protocol::HTTP::Response[200, {}, ["OK"]]}
+		app = lambda{|request| Protocol::HTTP::Response[200, {}, ["OK"]]}
 		Falcon::Limiter::Middleware.new(app, connection_limiter: limiter, maximum_long_tasks: 3)
 	end
 	
@@ -29,13 +29,13 @@ describe "Statistics Coverage" do
 	it "covers middleware response body handling" do
 		# Test that middleware properly handles response bodies using Protocol::HTTP::Body::Completable
 		body = Object.new
-		body.define_singleton_method(:empty?) {false}
-		body.define_singleton_method(:read) {"content"}
+		body.define_singleton_method(:empty?){false}
+		body.define_singleton_method(:read){"content"}
 		
 		# Mock request for middleware testing
 		request = Object.new
 		
 		# The middleware should handle response body wrapping properly
-		expect {middleware.call(request)}.not.to raise_exception
+		expect{middleware.call(request)}.not.to raise_exception
 	end
 end

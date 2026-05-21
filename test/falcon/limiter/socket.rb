@@ -11,13 +11,13 @@ describe Falcon::Limiter::Socket do
 	
 	let(:mock_socket) do
 		Object.new.tap do |socket|
-			socket.define_singleton_method(:close) {@closed = true}
-			socket.define_singleton_method(:closed?) {@closed || false}
-			socket.define_singleton_method(:read) {"socket data"}
-			socket.define_singleton_method(:write) {|data| data.length}
-			socket.define_singleton_method(:inspect) {"#<MockSocket>"}
-			socket.define_singleton_method(:to_s) {"MockSocket"}
-			socket.define_singleton_method(:class) {Object}
+			socket.define_singleton_method(:close){@closed = true}
+			socket.define_singleton_method(:closed?){@closed || false}
+			socket.define_singleton_method(:read){"socket data"}
+			socket.define_singleton_method(:write){|data| data.length}
+			socket.define_singleton_method(:inspect){"#<MockSocket>"}
+			socket.define_singleton_method(:to_s){"MockSocket"}
+			socket.define_singleton_method(:class){Object}
 		end
 	end
 	
@@ -44,7 +44,7 @@ describe Falcon::Limiter::Socket do
 	
 	it "handles respond_to_missing? correctly" do
 		# Add a method to the delegate after socket creation
-		mock_socket.define_singleton_method(:new_method) {"new method"}
+		mock_socket.define_singleton_method(:new_method){"new method"}
 		
 		# Should delegate respond_to? check to the delegate
 		expect(limited_socket).to respond_to(:new_method)
@@ -76,7 +76,7 @@ describe Falcon::Limiter::Socket do
 	
 	it "delegates method_missing calls" do
 		# Add a custom method to the mock socket
-		mock_socket.define_singleton_method(:custom_method) {"custom result"}
+		mock_socket.define_singleton_method(:custom_method){"custom result"}
 		
 		# Should delegate transparently
 		result = limited_socket.custom_method

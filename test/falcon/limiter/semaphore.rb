@@ -96,7 +96,7 @@ describe Falcon::Limiter::Semaphore do
 		5.times do |i|
 			threads << Thread.new do
 				token = Async::Limiter::Token.acquire(limiter)
-				mutex.synchronize {acquired_tokens << i}
+				mutex.synchronize{acquired_tokens << i}
 				sleep(0.01) # Hold token briefly
 				token.release
 			end
