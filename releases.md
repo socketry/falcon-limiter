@@ -1,6 +1,6 @@
 # Releases
 
-## Unreleased
+## v0.2.0
 
   - Use `async-limiter` v2.2 utilization metrics for connection and long task limiter telemetry.
 

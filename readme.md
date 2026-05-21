@@ -26,6 +26,10 @@ Please see the [project documentation](https://socketry.github.io/falcon-limiter
 
 Please see the [project releases](https://socketry.github.io/falcon-limiter/releases/index) for all releases.
 
+### v0.2.0
+
+  - Use `async-limiter` v2.2 utilization metrics for connection and long task limiter telemetry.
+
 ### v0.1.0
 
   - Initial implementation.
