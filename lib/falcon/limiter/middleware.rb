@@ -5,6 +5,7 @@
 # Copyright, 2025, by Samuel Williams.
 
 require "protocol/http/middleware"
+require "async/utilization"
 require_relative "long_task"
 require_relative "semaphore"
 
@@ -18,16 +19,18 @@ module Falcon
 			# @parameter connection_limiter [Async::Limiter] Connection limiter instance for managing accepts.
 			# @parameter maximum_long_tasks [Integer] Maximum number of concurrent long tasks (default: 10).
 			# @parameter start_delay [Float] Delay in seconds before starting long tasks (default: 0.1).
-			def initialize(delegate, connection_limiter:, maximum_long_tasks: 10, start_delay: 0.1)
+			# @parameter utilization [Async::Utilization::Registry] Utilization registry for limiter metrics.
+			def initialize(delegate, connection_limiter:, maximum_long_tasks: 10, start_delay: 0.1, utilization: Async::Utilization::Registry.new)
 				super(delegate)
 				
 				@maximum_long_tasks = maximum_long_tasks
 				@start_delay = start_delay
 				@connection_limiter = connection_limiter
-				@long_task_limiter = Semaphore.new(maximum_long_tasks)
+				@utilization = utilization
+				@long_task_limiter = Semaphore.new(maximum_long_tasks, utilization: utilization.namespace(:long_task))
 			end
 			
-			attr_reader :maximum_long_tasks, :start_delay, :long_task_limiter, :connection_limiter
+			attr_reader :maximum_long_tasks, :start_delay, :long_task_limiter, :connection_limiter, :utilization
 			
 			# Process an HTTP request with long task management support.
 			# Creates a long task context that applications can use to manage I/O operations.

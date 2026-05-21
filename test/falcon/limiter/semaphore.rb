@@ -4,6 +4,7 @@
 # Copyright, 2025, by Samuel Williams.
 
 require "falcon/limiter"
+require "async/utilization"
 require "sus/fixtures/async"
 
 describe Falcon::Limiter::Semaphore do
@@ -34,6 +35,20 @@ describe Falcon::Limiter::Semaphore do
 		
 		token3 = Async::Limiter::Token.acquire(limiter, timeout: 0)
 		expect(token3).not.to be_nil
+	end
+	
+	it "forwards utilization options" do
+		registry = Async::Utilization::Registry.new
+		utilization = registry.namespace(:socket_accept)
+		limiter = Falcon::Limiter::Semaphore.new(2, utilization: utilization)
+		
+		expect(limiter.utilization).to be_equal(utilization)
+		expect(registry.values).to have_keys(
+			socket_accept_acquired_count: be == 0,
+			socket_accept_available_count: be == 2,
+			socket_accept_waiting_count: be == 0,
+			socket_accept_reacquire_waiting_count: be == 0
+		)
 	end
 	
 	it "handles priority-based waiting" do
