@@ -4,6 +4,7 @@
 # Copyright, 2025, by Samuel Williams.
 
 require "falcon/limiter"
+require "async/utilization"
 require "sus/fixtures/async"
 require "sus/fixtures/async/http"
 require "protocol/http"
@@ -256,6 +257,27 @@ describe Falcon::Limiter::Middleware do
 			expect(statistics).to be_a(Hash)
 			expect(statistics[:long_task_limiter]).to be_a(Hash)
 			expect(statistics[:connection_limiter]).to be_a(Hash)
+		end
+	end
+	
+	with "#utilization" do
+		it "uses a long task utilization namespace" do
+			utilization = Async::Utilization::Registry.new
+			
+			middleware = Falcon::Limiter::Middleware.new(
+				mock_app,
+				connection_limiter: connection_limiter,
+				maximum_long_tasks: 3,
+				utilization: utilization
+			)
+			
+			expect(middleware.utilization).to be_equal(utilization)
+			expect(utilization.values).to have_keys(
+				long_task_acquired_count: be == 0,
+				long_task_available_count: be == 3,
+				long_task_waiting_count: be == 0,
+				long_task_reacquire_waiting_count: be == 0
+			)
 		end
 	end
 end

@@ -15,13 +15,14 @@ module Falcon
 		module Semaphore
 			# Create a new limiter with the specified capacity.
 			# @parameter limit [Integer] The maximum number of concurrent operations allowed (default: 1).
+			# @parameter options [Hash] Options passed to {Async::Limiter::Queued#initialize}.
 			# @returns [Async::Limiter::Queued] A new limiter instance with pre-allocated tokens.
-			def self.new(limit = 1)
+			def self.new(limit = 1, **options)
 				# Create priority queue and pre-populate with tokens
 				queue = Async::PriorityQueue.new
 				limit.times{queue.push(true)}
 				
-				return Async::Limiter::Queued.new(queue)
+				return Async::Limiter::Queued.new(queue, **options)
 			end
 		end
 	end

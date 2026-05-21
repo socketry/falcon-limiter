@@ -40,6 +40,12 @@ describe Falcon::Limiter::Environment do
 		
 		expect(limiter).to be_a(Async::Limiter::Queued)
 		expect(limiter.queue.size).to be == 1 # Based on limiter_maximum_connections
+		expect(evaluator.limiter_utilization.values).to have_keys(
+			socket_accept_acquired_count: be == 0,
+			socket_accept_available_count: be == 1,
+			socket_accept_waiting_count: be == 0,
+			socket_accept_reacquire_waiting_count: be == 0
+		)
 	end
 	
 	it "creates unified semaphore for coordination (memoized)" do

@@ -7,6 +7,7 @@
 require_relative "middleware"
 require_relative "semaphore"
 require_relative "wrapper"
+require "async/utilization"
 
 module Falcon
 	module Limiter
@@ -32,13 +33,18 @@ module Falcon
 				0.1
 			end
 			
+			# @returns [Async::Utilization::Registry] The utilization registry for limiter metrics.
+			def limiter_utilization
+				@limiter_utilization ||= Async::Utilization::Registry.new
+			end
+			
 			# @returns [Async::Limiter::Queued] The limiter for coordinating long tasks and connection accepts.
 			def connection_limiter
 				# Create priority queue and pre-populate with tokens:
 				queue = Async::PriorityQueue.new
 				limiter_maximum_connections.times{queue.push(true)}
 				
-				Async::Limiter::Queued.new(queue)
+				Async::Limiter::Queued.new(queue, utilization: limiter_utilization.namespace(:socket_accept))
 			end
 			
 			# @returns [Class] The middleware class to use for long task support.
@@ -54,7 +60,8 @@ module Falcon
 						middleware, 
 						connection_limiter: connection_limiter,
 						maximum_long_tasks: limiter_maximum_long_tasks,
-						start_delay: limiter_start_delay
+						start_delay: limiter_start_delay,
+						utilization: limiter_utilization
 					)
 				else
 					middleware
