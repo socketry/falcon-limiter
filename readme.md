@@ -26,6 +26,10 @@ Please see the [project documentation](https://socketry.github.io/falcon-limiter
 
 Please see the [project releases](https://socketry.github.io/falcon-limiter/releases/index) for all releases.
 
+### v0.3.0
+
+  - Use `Async::Limiter::Token#close` when closing sockets so cached tokens cannot re-acquire after socket close.
+
 ### v0.2.0
 
   - Use `async-limiter` v2.2 utilization metrics for connection and long task limiter telemetry.

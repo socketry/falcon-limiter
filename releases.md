@@ -1,8 +1,8 @@
 # Releases
 
-## Unreleased
+## v0.3.0
 
-- Use `Async::Limiter::Token#close` when closing sockets so cached tokens cannot re-acquire after socket close.
+  - Use `Async::Limiter::Token#close` when closing sockets so cached tokens cannot re-acquire after socket close.
 
 ## v0.2.0
 
