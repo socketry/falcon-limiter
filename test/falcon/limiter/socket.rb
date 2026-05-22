@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Released under the MIT License.
-# Copyright, 2025, by Samuel Williams.
+# Copyright, 2025-2026, by Samuel Williams.
 
 require "falcon/limiter"
 
@@ -66,7 +66,34 @@ describe Falcon::Limiter::Socket do
 		limited_socket.close
 		
 		expect(token).to be(:released?)
+		expect(limited_socket.token).to be_nil
 		expect(limited_socket.closed?).to be == true
+	end
+	
+	it "allows the token to be released and acquired while the socket is open" do
+		socket_token = limited_socket.token
+		expect(socket_token).to be(:acquired?)
+		
+		socket_token.release
+		expect(token).to be(:released?)
+		expect(limiter.queue.size).to be == 1
+		
+		expect(socket_token.acquire(priority: 1000)).not.to be_nil
+		expect(token).not.to be(:released?)
+		expect(limiter.queue.size).to be == 0
+	end
+	
+	it "prevents a cached token from acquiring after the socket is closed" do
+		socket_token = limited_socket.token
+		
+		socket_token.release
+		expect(limiter.queue.size).to be == 1
+		
+		limited_socket.close
+		
+		expect(socket_token).to be(:closed?)
+		expect(socket_token.acquire(priority: 1000)).to be_nil
+		expect(limiter.queue.size).to be == 1
 	end
 	
 	it "provides proper string conversion" do
