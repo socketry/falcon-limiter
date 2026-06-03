@@ -1,6 +1,6 @@
 # Releases
 
-## Unreleased
+## v0.4.0
 
   - Add `Falcon::Limiter::LongTask#pending?` for detecting delayed long tasks which have not acquired yet.
 
