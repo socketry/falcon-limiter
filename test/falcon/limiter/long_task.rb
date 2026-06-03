@@ -19,7 +19,7 @@ describe Falcon::Limiter::LongTask do
 		io = Object.new
 		io.define_singleton_method(:token){token}
 		
-		stream = Object.new  
+		stream = Object.new
 		stream.define_singleton_method(:io){io}
 		
 		connection = Object.new
@@ -66,10 +66,12 @@ describe Falcon::Limiter::LongTask do
 		
 		# Start with delay
 		long_task.start(delay: 0.01)
+		expect(long_task).to be(:pending?)
 		expect(long_task).not.to be(:acquired?)  # Not started yet due to delay
 		
 		# Wait for delay to complete
 		sleep(0.02)
+		expect(long_task).not.to be(:pending?)
 		expect(long_task).to be(:acquired?)
 		
 		# Stop the long task
@@ -82,11 +84,33 @@ describe Falcon::Limiter::LongTask do
 		
 		# Start with delay
 		long_task.start(delay: 0.1)
+		expect(long_task).to be(:pending?)
 		expect(long_task).not.to be(:acquired?)
 		
 		# Stop before delay completes
 		long_task.stop
+		expect(long_task).not.to be(:pending?)
 		expect(long_task).not.to be(:acquired?)
+	end
+	
+	it "is pending while waiting to acquire after delay" do
+		long_task_limiter = Falcon::Limiter::Semaphore.new(1)
+		token = Async::Limiter::Token.acquire(long_task_limiter)
+		long_task = Falcon::Limiter::LongTask.for(mock_request, long_task_limiter, start_delay: 0.01)
+		
+		long_task.start(delay: 0.01)
+		sleep(0.02)
+		
+		expect(long_task).to be(:pending?)
+		expect(long_task).not.to be(:acquired?)
+		
+		token.release
+		sleep(0.01)
+		
+		expect(long_task).not.to be(:pending?)
+		expect(long_task).to be(:acquired?)
+		
+		long_task.stop
 	end
 	
 	it "can force stop" do
@@ -108,7 +132,7 @@ describe Falcon::Limiter::LongTask do
 		
 		# Should handle missing connection gracefully (no exception raised)
 		expect do
-			long_task.start(delay: 0) 
+			long_task.start(delay: 0)
 		end.not.to raise_exception
 		
 		# Long task should still work even without connection token
@@ -122,7 +146,7 @@ describe Falcon::Limiter::LongTask do
 		io = Object.new
 		io.define_singleton_method(:token){token}
 		
-		stream = Object.new  
+		stream = Object.new
 		stream.define_singleton_method(:io){io}
 		
 		connection = Object.new
@@ -147,7 +171,7 @@ describe Falcon::Limiter::LongTask do
 		io = Object.new
 		io.define_singleton_method(:token){token}
 		
-		stream = Object.new  
+		stream = Object.new
 		stream.define_singleton_method(:io){io}
 		
 		persistent_connection = Object.new

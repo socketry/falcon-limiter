@@ -77,6 +77,12 @@ module Falcon
 				@token.acquired?
 			end
 			
+			# Check if the long task is waiting to acquire the long task token.
+			# @returns [Boolean] If the long task has been scheduled but not yet acquired.
+			def pending?
+				@delayed_start_task != nil
+			end
+			
 			# Start the long task, optionally with a delay to avoid overhead for short operations
 			def start(delay: @start_delay)
 				# If already started, nothing to do:
