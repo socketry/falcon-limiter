@@ -61,6 +61,28 @@ describe Falcon::Limiter::LongTask do
 		expect(long_task).not.to be(:started?)
 	end
 	
+	it "stores tags while started and clears them when stopped" do
+		long_task = Falcon::Limiter::LongTask.for(mock_request, long_task_limiter, start_delay: 0)
+		tags = {name: :rpc, controller: "ProductsController"}
+		
+		long_task.start(delay: 0, tags: tags)
+		expect(long_task.tags).to be == tags
+		
+		long_task.stop
+		expect(long_task.tags).to be_nil
+	end
+	
+	it "stores tags during block form and clears them afterwards" do
+		long_task = Falcon::Limiter::LongTask.for(mock_request, long_task_limiter, start_delay: 0)
+		tags = {name: :graphql_proxy}
+		
+		long_task.start(delay: 0, tags: tags) do |task|
+			expect(task.tags).to be == tags
+		end
+		
+		expect(long_task.tags).to be_nil
+	end
+	
 	it "can start with delay" do
 		long_task = Falcon::Limiter::LongTask.for(mock_request, long_task_limiter, start_delay: 0.01)
 		
@@ -91,6 +113,19 @@ describe Falcon::Limiter::LongTask do
 		long_task.stop
 		expect(long_task).not.to be(:pending?)
 		expect(long_task).not.to be(:acquired?)
+		expect(long_task.tags).to be_nil
+	end
+	
+	it "stores tags while pending" do
+		long_task = Falcon::Limiter::LongTask.for(mock_request, long_task_limiter, start_delay: 0.1)
+		tags = {name: :core_polling}
+		
+		long_task.start(delay: 0.1, tags: tags)
+		expect(long_task).to be(:pending?)
+		expect(long_task.tags).to be == tags
+		
+		long_task.stop
+		expect(long_task.tags).to be_nil
 	end
 	
 	it "is pending while waiting to acquire after delay" do
@@ -275,5 +310,19 @@ describe Falcon::Limiter::LongTask do
 		
 		# Clean up
 		long_task.stop(force: true)
+	end
+	
+	it "does not replace tags when already started" do
+		long_task = Falcon::Limiter::LongTask.new(nil, long_task_limiter)
+		tags = {name: :outer}
+		
+		long_task.start(delay: 0, tags: tags)
+		long_task.start(delay: 0, tags: {name: :inner})
+		
+		expect(long_task.tags).to be == tags
+		
+		# Clean up
+		long_task.stop(force: true)
+		expect(long_task.tags).to be_nil
 	end
 end

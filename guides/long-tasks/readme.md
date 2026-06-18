@@ -128,6 +128,16 @@ end
 
 The block form ensures the long task is properly stopped even if an exception occurs. They can also be nested.
 
+### Tags
+
+You can attach application-specific metadata when starting a long task:
+
+```ruby
+Falcon::Limiter::LongTask.current.start(tags: {name: :external_api_call})
+```
+
+Tags are stored on the long task while it is started or pending, and cleared when it stops. The limiter does not interpret tags directly; they are intended for instrumentation layers.
+
 ## Long Task Lifecycle
 
 ### 1. Creation

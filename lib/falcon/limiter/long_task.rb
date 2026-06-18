@@ -19,6 +19,8 @@ module Falcon
 			# The priority to use when stopping a long task to re-acquire the connection token.
 			STOP_PRIORITY = 1000
 			
+			attr_reader :tags
+			
 			# @returns [LongTask] The current long task.
 			def self.current
 				Fiber.current.falcon_limiter_long_task
@@ -63,6 +65,7 @@ module Falcon
 				
 				@token = Async::Limiter::Token.new(@limiter)
 				@delayed_start_task = nil
+				@tags = nil
 			end
 			
 			# Check if the long task has been started, but not necessarily acquired (e.g. if there was a delay).
@@ -84,7 +87,7 @@ module Falcon
 			end
 			
 			# Start the long task, optionally with a delay to avoid overhead for short operations
-			def start(delay: @start_delay)
+			def start(delay: @start_delay, tags: nil)
 				# If already started, nothing to do:
 				if started?
 					if block_given?
@@ -99,6 +102,8 @@ module Falcon
 				elsif delay == false
 					delay = nil
 				end
+				
+				@tags = tags
 				
 				# Otherwise, start the long task:
 				if delay&.positive?
@@ -137,6 +142,8 @@ module Falcon
 				
 				# Release the long task token:
 				release(force, **options)
+			ensure
+				@tags = nil
 			end
 			
 			private
