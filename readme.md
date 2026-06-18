@@ -26,7 +26,7 @@ Please see the [project documentation](https://socketry.github.io/falcon-limiter
 
 Please see the [project releases](https://socketry.github.io/falcon-limiter/releases/index) for all releases.
 
-### Unreleased
+### v0.5.0
 
   - Add optional `Falcon::Limiter::LongTask#start(tags:)` metadata for instrumentation.
 

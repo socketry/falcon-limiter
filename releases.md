@@ -1,6 +1,6 @@
 # Releases
 
-## Unreleased
+## v0.5.0
 
   - Add optional `Falcon::Limiter::LongTask#start(tags:)` metadata for instrumentation.
 
