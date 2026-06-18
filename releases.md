@@ -1,5 +1,9 @@
 # Releases
 
+## Unreleased
+
+  - Add optional `Falcon::Limiter::LongTask#start(tags:)` metadata for instrumentation.
+
 ## v0.4.0
 
   - Add `Falcon::Limiter::LongTask#pending?` for detecting delayed long tasks which have not acquired yet.
